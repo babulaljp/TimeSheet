@@ -1,0 +1,69 @@
+﻿@page
+@model Timesheet.Pages.viewTimeModel
+@{
+    // compute Monday of the week that contains SelectedDate
+    var selectedDow = Model.SelectedDate.DayOfWeek;
+    int offsetToMonday = ((int)selectedDow + 6) % 7;
+    var monday = Model.SelectedDate.Date.AddDays(-offsetToMonday);
+
+    Func<int, string> linkClass = i => (monday.AddDays(i).Date == Model.SelectedDate.Date ? " active" : "");
+    Func<int, string> dateParam = i => monday.AddDays(i).ToString("yyyy-MM-dd");
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Add your Time</h2>
+    <a class="btn btn-primary" asp-page="CaptureTime" asp-route-SelectedDate="@(Model.SelectedDate.ToString("yyyy-MM-dd"))"> + </a>
+</div>
+
+<!-- Date filter form (GET) -->
+<form method="get" class="mb-3 d-flex gap-2 align-items-center">
+    <label class="mb-0">Date:</label>
+    <input asp-for="SelectedDate" type="date" class="form-control" onchange="this.form.submit()" />
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-3 ">
+    <ul class="align-content-md-center" style="list-style:none;display: flex;padding: 10px;gap: 50px;">
+        <li><a href="?SelectedDate=@(Model.SelectedDate.Date.AddDays(-1).ToString("yyyy-MM-dd"))"><</a></li>
+        <li><a class="@linkClass(0)" href="?SelectedDate=@dateParam(0)">Mon</a></li>
+        <li><a class="@linkClass(1)" href="?SelectedDate=@dateParam(1)">Tue</a></li>
+        <li><a class="@linkClass(2)" href="?SelectedDate=@dateParam(2)">Wed</a></li>
+        <li><a class="@linkClass(3)" href="?SelectedDate=@dateParam(3)">Thu</a></li>
+        <li><a class="@linkClass(4)" href="?SelectedDate=@dateParam(4)">Fri</a></li>
+        <li><a class="@linkClass(5)" href="?SelectedDate=@dateParam(5)">Sat</a></li>
+        <li><a class="@linkClass(6)" href="?SelectedDate=@dateParam(6)">Sun</a></li>
+        <li><a href="?SelectedDate=@(Model.SelectedDate.Date.AddDays(1).ToString("yyyy-MM-dd"))">></a></li>
+
+        
+    </ul> 
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Project</th>
+                <th>Details</th>
+                <th>Hours spent</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Times?.Any() == true)
+            {
+                foreach (var u in Model.Times)
+                {
+                    <tr>
+                        <td>
+                            @u.ProjectName  
+                            @u.TaskName
+                        </td>
+                        <td>@u.details</td>
+                        <td>@u.HoursWorked </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="5" class="text-center">No times found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
