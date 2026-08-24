@@ -1,17 +1,17 @@
 ﻿@page
 @model IndexModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Home page";
 }
 
 <div class="text-center">
     
+    @{ var myEnv = Configuration["EnvName"] ?? Environment.GetEnvironmentVariable("EnvName"); }
     @if (User?.Identity?.IsAuthenticated == true)
     {
-        <h1 class="display-4">Welcome  @User.Identity.Name</h1>
+        <h1 class="display-4">Welcome  @User.Identity.Name to Env: @myEnv </h1>
         
-
-
     }
      
 
