@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.Data.SqlClient;
@@ -13,10 +14,12 @@ namespace UEAW.Pages
     public class RegisterModel : PageModel
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<RegisterModel> _logger;
 
-        public RegisterModel(IConfiguration config)
+        public RegisterModel(IConfiguration config, ILogger<RegisterModel> logger)
         {
             _config = config;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -82,6 +85,7 @@ VALUES (@UserName, @PasswordHash, @FirstName, @LastName, @Email);";
             }
             catch (SqlException ex)
             {
+                _logger.LogError(ex, "Unable to save user to database for user {UserName}", UM?.UserName);
                 ModelState.AddModelError(string.Empty, "Unable to save user: " + ex.Message);
                 //UM.ErrorMessage = ex.Message;
                 return Page();

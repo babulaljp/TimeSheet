@@ -7,6 +7,7 @@
     <div class="col-md-6">
         <h2>Register</h2>
         <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
             <div class="mb-3">
                 <label asp-for="UM.UserName" class="form-label"></label>
                 <input asp-for="UM.UserName" class="form-control" />
@@ -34,7 +35,6 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Register</button>
-            <label asp-for="UM.ErrorMessage" class="form-label"></label>
         </form>
          
 
