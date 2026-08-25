@@ -44,46 +44,53 @@ app.Use(async (context, next) =>
         var user = context.User;
         if (user?.Identity?.IsAuthenticated == true)
         {
-            // Only set cookies if not already present
-            if (!context.Request.Cookies.ContainsKey("dbusername") || !context.Request.Cookies.ContainsKey("userid"))
+            var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
+            if (!string.IsNullOrWhiteSpace(connStr))
             {
-                var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
-                if (!string.IsNullOrWhiteSpace(connStr))
+                var username = user.Identity.Name;
+                if (!string.IsNullOrEmpty(username))
                 {
-                    var username = user.Identity.Name;
-                    if (!string.IsNullOrEmpty(username))
+                    using var conn = new SqlConnection(connStr);
+                    await conn.OpenAsync();
+
+                    using var cmd = new SqlCommand("SELECT UserId, UserName FROM Users WHERE UserName = @u", conn);
+                    cmd.Parameters.AddWithValue("@u", username);
+
+                    using var reader = await cmd.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
                     {
-                        using var conn = new SqlConnection(connStr);
-                        await conn.OpenAsync();
+                        var idOrd = reader.GetOrdinal("UserId");
+                        var nameOrd = reader.GetOrdinal("UserName");
 
-                        using var cmd = new SqlCommand("SELECT UserId, UserName FROM Users WHERE UserName = @u", conn);
-                        cmd.Parameters.AddWithValue("@u", username);
+                        var idVal = reader.IsDBNull(idOrd) ? string.Empty : reader.GetValue(idOrd).ToString();
+                        var nameVal = reader.IsDBNull(nameOrd) ? string.Empty : reader.GetString(nameOrd);
 
-                        using var reader = await cmd.ExecuteReaderAsync();
-                        if (await reader.ReadAsync())
+                        var cookieOptions = new CookieOptions
                         {
-                            var idOrd = reader.GetOrdinal("UserId");
-                            var nameOrd = reader.GetOrdinal("UserName");
+                            HttpOnly = true,
+                            Secure = context.Request.IsHttps,
+                            SameSite = SameSiteMode.Lax,
+                            Expires = DateTimeOffset.UtcNow.AddDays(7)
+                        };
 
-                            var idVal = reader.IsDBNull(idOrd) ? string.Empty : reader.GetValue(idOrd).ToString();
-                            var nameVal = reader.IsDBNull(nameOrd) ? string.Empty : reader.GetString(nameOrd);
+                        // Update cookies when missing or when values differ from the current authenticated user
+                        var existingName = context.Request.Cookies["dbusername"];
+                        var existingId = context.Request.Cookies["userid"];
 
-                            var cookieOptions = new CookieOptions
-                            {
-                                HttpOnly = true,
-                                Secure = context.Request.IsHttps,
-                                SameSite = SameSiteMode.Lax,
-                                Expires = DateTimeOffset.UtcNow.AddDays(7)
-                            };
+                        if (!string.IsNullOrEmpty(nameVal) && existingName != nameVal)
+                        {
+                            context.Response.Cookies.Append("dbusername", nameVal, cookieOptions);
+                        }
 
-                            if (!string.IsNullOrEmpty(nameVal))
-                                context.Response.Cookies.Append("dbusername", nameVal, cookieOptions);
+                        if (!string.IsNullOrEmpty(idVal) && existingId != idVal)
+                        {
+                            context.Response.Cookies.Append("userid", idVal, cookieOptions);
+                        }
 
-                            if (!string.IsNullOrEmpty(idVal))
-                            {
-                                context.Response.Cookies.Append("userid", idVal, cookieOptions);
-                                context.Items["userid"] = idVal;
-                            }
+                        // Ensure userid is available in context items for downstream code
+                        if (!string.IsNullOrEmpty(idVal))
+                        {
+                            context.Items["userid"] = idVal;
                         }
                     }
                 }

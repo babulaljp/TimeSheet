@@ -2,6 +2,16 @@ create database TimeSheet;
 
 use TimeSheet;
 
+--DB Users
+-- Execute this script directly inside your specific user database
+CREATE USER tmsdev WITH PASSWORD = 'tms!dev@bk248';
+
+-- Grant required permissions (e.g., read and write data)
+ALTER ROLE db_datareader ADD MEMBER [tmsdev];
+ALTER ROLE db_datawriter ADD MEMBER [tmsdev];
+ALTER ROLE db_ddladmin ADD MEMBER [tmsdev];
+
+--------------
 create table users (
 	userid INT PRIMARY KEY identity(1,1),
 	username VARCHAR(50) NOT NULL UNIQUE,
@@ -52,10 +62,13 @@ create table Clients (ClientId INT PRIMARY KEY identity(1,1), ClientName VARCHAR
 insert into Clients (ClientName) values ('United Educators');
 -------------
 
-select ut.tDate, ut.tHours, ut.Details, p.ProjectName, t.TaskName
+select ut.tDate, ut.tHours, ut.Details, p.ProjectName, t.TaskName,ut.UserId , u.UserId,UserName
 from UserTime ut
 join Tasks t on ut.TaskId = t.TaskId
 join Projects p on ut.ProjectId = p.ProjectId
 join Users u on ut.UserId = u.UserId
-where u.UserName = 'babulaljp' and CONVERT(date, ut.tDate) = convert(date,getdate())
+where u.UserName = 'babulaljp' --and CONVERT(date, ut.tDate) = convert(date,getdate())
 order by ut.updateAt asc;
+
+-------------------
+
