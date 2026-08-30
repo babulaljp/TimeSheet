@@ -1,18 +1,139 @@
 ﻿@page
-@model IndexModel
+@model Timesheet.Pages.IndexModel
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Timesheet";
+    var myEnv = Configuration["EnvName"] ?? Environment.GetEnvironmentVariable("EnvName");
 }
 
-<div class="text-center">
-    
-    @{ var myEnv = Configuration["EnvName"] ?? Environment.GetEnvironmentVariable("EnvName"); }
-    @if (User?.Identity?.IsAuthenticated == true)
-    {
-        <h1 class="display-4">Welcome  @User.Identity.Name to Env: @myEnv </h1>
-        
-    }
-     
+@if (User?.Identity?.IsAuthenticated == true)
+{
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3">Timesheet Dashboard</h1>
+                <div class="text-muted">Signed in as <strong>@User.Identity.Name</strong> @if(!string.IsNullOrEmpty(myEnv)) { <span class="mx-2">•</span> <small class="text-muted">Env: @myEnv</small> }</div>
+            </div>
+            <div>
+                <a class="btn btn-primary me-2" href="/CaptureTime">+ New Entry</a>
+                <a class="btn btn-outline-secondary" href="/Export">Export</a>
+            </div>
+        </div>
 
-</div>
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Today</h6>
+                        <p class="display-6 mb-0">@Model.TodayHours.ToString("F2") hrs</p>
+                        <div class="text-muted small">@((Model.TodayHours == 0) ? "No entries for today" : "Entries logged today")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">This Week</h6>
+                        <p class="display-6 mb-0">@Model.WeekHours.ToString("F2") hrs</p>
+                        <div class="text-muted small">@((Model.WeekHours == 0) ? "No entries this week" : "Entries logged this week")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Pending Approval</h6>
+                        <p class="display-6 mb-0">@Model.PendingApprovals</p>
+                        <div class="text-muted small">Timesheets awaiting approval</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Recent Entries</strong>
+                <small class="text-muted">Last 7 days</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Project</th>
+                                <th>Task</th>
+                                <th class="text-end">Hours</th>
+                                <th>Notes</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentEntries != null && Model.RecentEntries.Any())
+                            {
+                                foreach (var e in Model.RecentEntries)
+                                {
+                                    <tr>
+                                        <td>@e.Date.ToString("yyyy-MM-dd")</td>
+                                        <td>@e.ProjectName</td>
+                                        <td>@e.TaskName</td>
+                                        <td class="text-end">@e.HoursWorked.ToString("F2")</td>
+                                        <td>@e.details</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-5">No timesheet entries found. Click "New Entry" to add your first record.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <small class="text-muted">Showing page @Model.Page of @Model.TotalPages (@Model.TotalEntries entries)</small>
+            </div>
+            <div>
+                <nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                            <a class="page-link" href="?page=@(Model.Page-1)&pageSize=@Model.PageSize">Previous</a>
+                        </li>
+                        <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="?page=@(Model.Page+1)&pageSize=@Model.PageSize">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <div class="mt-4 text-muted small">
+            <p class="mb-1">Tips:</p>
+            <ul>
+                <li>Click <strong>New Entry</strong> to create a timesheet row for a date and project.</li>
+                <li>Use <strong>Export</strong> to download a CSV of your submitted timesheets.</li>
+            </ul>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h1 class="display-5">Welcome to Timesheet</h1>
+                <p class="lead text-muted">Track your work hours, submit timesheets, and export reports. Sign in to get started.</p>
+                <div class="d-flex justify-content-center mt-3">
+                    <a class="btn btn-primary me-2" href="/Login">Sign in</a>
+                    <a class="btn btn-outline-secondary" href="/Register">Register</a>
+                </div>
+                @if(!string.IsNullOrEmpty(myEnv)) { <div class="text-muted small mt-3">Env: @myEnv</div> }
+            </div>
+        </div>
+    </div>
+}

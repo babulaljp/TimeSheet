@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System.ComponentModel.DataAnnotations;
+using Timesheet.Models;
 
 namespace Timesheet.Pages
 {
@@ -81,13 +82,5 @@ order by ut.updateAt asc;";
             return t;
         }
 
-        public class TimeViewModel
-        {
-            public DateTime Date { get; set; }
-            public double HoursWorked { get; set; }
-            public string ProjectName { get; set; }
-            public string details { get; set; }
-            public string TaskName { get; set; } 
-        }
     }
 }
