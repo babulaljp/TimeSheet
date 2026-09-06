@@ -23,9 +23,7 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/ContactUs">Contact Us</a>
-                        </li>
+                        
                         @if (User?.Identity?.IsAuthenticated == true)
                             {
                                 <li class="nav-item">
@@ -67,7 +65,10 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - TimeSheet - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2026 - TimeSheet - <a asp-area="" asp-page="/Privacy">Privacy</a> 
+             
+                <a class="nav-link text-dark" asp-area="" asp-page="/ContactUs">Contact Us</a>
+             
         </div>
     </footer>
 
